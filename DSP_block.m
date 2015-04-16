@@ -1,17 +1,33 @@
 clear all;
 close all;
 clc;
-
 cd C:\Users\Jangs\Documents\JangProject;
 
+TESTCASE = 2;
 down_N = 3;                            % 다운 샘플링 계수
-FILTER_TYPE = 3;                       % 1 == mean 2 == linear 3 == nevile
+FILTER_TYPE = 2;                       % 1 == mean, 2 == linear, 3 == nevile
+datatype = 3;                          % 1 == uint8, 2 == int16, 3 == float
 
-fprintf('Down_sampling_Level : %d, Filter Type : %d\n',down_N,FILTER_TYPE);
+fprintf('Down_sampling_Level : %d, Filter Type : %d, Data type : %d\n',down_N,FILTER_TYPE, datatype);
 
 %% 음성신호 읽기 (16bit -> 8bit)
-[x_16,fs,bit]=wavread('aeoshang.wav','native'); % read speaker signal
-x_16 = x_16(1:4000*100);
+if(TESTCASE == 1)
+    [x_16,fs,bit]=wavread('testcase1.wav','native'); % read speaker signal
+end
+if(TESTCASE == 2)
+    [x_16,fs,bit]=wavread('testcase2.wav','native'); % read speaker signal
+end
+if(TESTCASE == 3)
+    [x_16,fs,bit]=wavread('testcase3.wav','native'); % read speaker signal
+end
+if(TESTCASE == 4)
+    [x_16,fs,bit]=wavread('testcase4.wav','native'); % read speaker signal
+end
+if(TESTCASE == 5)
+    [x_16,fs,bit]=wavread('testcase5.wav','native'); % read speaker signal
+end
+
+x_16 = x_16(1:4096*1000);
 % 16 bit -> 8 bit
 con_x = int32(x_16) + 32768;
 x_8 =  uint8((con_x ./256));  % 캐스팅시 데이터가 손상된다. 1손상 256 -> 255
@@ -37,46 +53,55 @@ end
 
 %% 음성신호 UpSampling (구현 시 N 조절가능하도록 만들기)
 %up_api_x = upsample(down_x,down_N);
-
-up_x = uint8(zeros(1,total_sample))';
-for i = 1:ndown_sample
-    up_x(down_N*i) = down_x(i);
+if(datatype == 1)
+    up_x = uint8(zeros(1,total_sample))';
+    for i = 1:ndown_sample
+        up_x(down_N*i) = down_x(i);
+    end
 end
+if(datatype == 3)
+    up_x = single(zeros(1,total_sample))';  % float data로 변형
+    for i = 1:ndown_sample
+        up_x(down_N*i) = (single(down_x(i)) - 128)/128;
+    end
+end
+
+
 
 %% interpolation
 if(FILTER_TYPE == 1)
     % Mean filter
     fprintf('Mean_filter\n');
-    interp_x =  mean_interpolation_filter(up_x,down_N,ndown_sample);
+    interp_x =  mean_interpolation_filter(up_x,down_N,ndown_sample,datatype);
 end
 if(FILTER_TYPE == 2)
     % Linear filter
     fprintf('Linear_filter\n');
-    interp_x =  linear_interpolation_filter(up_x,down_N,ndown_sample);
+    interp_x =  linear_interpolation_filter(up_x,down_N,ndown_sample,datatype);
 end
 if(FILTER_TYPE == 3)
     % Nevile filter
-    % 이거좀 어려울것 같은 느낌인데
-    
-    %     BUF_FACTOR = 8;
-    %     BUF_SIZE =  down_N * BUF_FACTOR;
-    %
-    %     buffer1 = zeros(BUF_SIZE ,1);
-    %     buffer2 = zeros(BUF_SIZE ,1);
-    
-    %     버퍼쓰지말고 인덱싱으로 하는게 나을 거 같은데?
     fprintf('Nevile_filter\n');
-    interp_x =  linear_interpolation_filter(up_x,down_N,ndown_sample);  
+    interp_x =  nevile_interpolation_filter(up_x,down_N,ndown_sample);
 end
 
 
-%% 8bit->int16 확장 모듈 구현
 
-con_x = int32(interp_x) * 256;   % 0 - 65280
-con_x = int16(con_x - 32768);
-
+if(datatype == 1)
+    %% 8bit->int16 확장 모듈 구현
+    
+    con_x = int32(interp_x) * 256;   % 0 - 65280
+    con_x = int16(con_x - 32768);
+    
+    %%  Data Check기 구현 (전체 샘플수에 대한)
+    diff= sum(abs(x_8  - interp_x));
+    fprintf('Error rate : %s\n',diff/total_sample);
+end
+if (datatype == 3)
+    con_x = interp_x;
+end
 toc();
-stem(30000:31000);
+stem(con_x(30000:31000))
 player = audioplayer(con_x,fs);
 play(player);
 % stop(player);
