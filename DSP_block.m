@@ -5,7 +5,7 @@ clc;
 cd C:\Users\Jangs\Documents\JangProject;
 
 TESTCASE = 5;
-down_N = 2;                            % 다운 샘플링 계수
+down_N = 3;                            % 다운 샘플링 계수
 FILTER_TYPE = 2;                       % 1 == mean, 2 == linear, 3 == nevile
 datatype = 3;                          % 1 == uint8, 2 == int16, 3 == float
 BPFtype = 3;                           % 1 == AM Radio 2 == FM Radio 3 == NTSC TV Audio 
@@ -67,7 +67,7 @@ if(TESTCASE == 5)
     [x_16,fs,bit]=wavread('testcase5.wav','native'); % read speaker signal
 end
 
-x_16 = x_16(1:4096*2);
+x_16 = x_16(1:4096*2000);
 % 16 bit -> 8 bit
 con_x = int32(x_16) + 32768;
 x_8 =  uint8((con_x ./256));  % 캐스팅시 데이터가 손상된다. 1손상 256 -> 255
