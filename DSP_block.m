@@ -4,7 +4,7 @@ clc;
 
 cd C:\Users\Jangs\Documents\JangProject;
 
-TESTCASE = 5;
+TESTCASE = 1;
 down_N = 3;                            % 다운 샘플링 계수
 FILTER_TYPE = 2;                       % 1 == mean, 2 == linear, 3 == nevile
 datatype = 3;                          % 1 == uint8, 2 == int16, 3 == float
@@ -44,6 +44,13 @@ q0(40)=q0(40)+err;
 q0 = single(q0);
 h0=firminphase(q0);
 
+[N,fpts,mag,wt]=firpmord([5250 9750],[1 0],[0.0005 0.0005],22050);
+[q0,err]=firpm(N,fpts,mag,wt);
+q0(9)=q0(9)+err;
+q0 = single(q0);
+h0=firminphase(q0);
+
+
 figure(1);
 H0  = freqz(h0,1,22050);
 plot(abs(H0),'r');
@@ -75,6 +82,7 @@ if(datatype == 3)
     x_float = single(x_16)/32768;
 end
 
+x_16 = int16(x_8)
 %% 음성신호 실시간 처리
 % Buffer 사용
 
@@ -102,6 +110,7 @@ if(datatype == 1)
         up_x(down_N*i) = down_x(i);
     end
 end
+
 if(datatype == 3)
     up_x = single(zeros(1,total_sample))';  % float data로 변형
     for i = 1:ndown_sample

@@ -20,11 +20,23 @@ for i = 1:(down_Level-1)
           val = val/down_Level;
           vect_result(down_Level *j + i) = vect_X(down_Level*j) + uint8(val);
           end
+          
+          if(datatype == 2)
+          % uint16 기준
+          val = uint16(vect_X(down_Level*(j+1))) - uint16(vect_X(down_Level*j));  
+          val = val * i;
+          val = val/down_Level;
+          vect_result(down_Level *j + i) = vect_X(down_Level*j) + uint16(val);
+          end
+          
           if(datatype == 3)
           % float 기준
           val = (vect_X(down_Level*(j+1))) - (vect_X(down_Level*j));  
+          sprintf('%f',val);
           val = val * i;
+          sprintf('%f',val);
           val = val/down_Level;
+          sprintf('%f',val);
           vect_result(down_Level *j + i) = vect_X(down_Level*j) + (val);
           end
    end
