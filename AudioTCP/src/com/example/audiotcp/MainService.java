@@ -1,7 +1,6 @@
 package com.example.audiotcp;
 
 import java.io.DataInputStream;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 
@@ -11,7 +10,6 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.IBinder;
-import android.util.Log;
 
 public class MainService extends Service {
 
@@ -23,8 +21,9 @@ public class MainService extends Service {
 			AudioFormat.ENCODING_PCM_8BIT);
 	AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
 			SAMPLE_RATE, AudioFormat.CHANNEL_CONFIGURATION_MONO,
-			AudioFormat.ENCODING_PCM_8BIT, minSize, AudioTrack.MODE_STREAM);;
+			AudioFormat.ENCODING_PCM_8BIT, minSize, AudioTrack.MODE_STREAM);
 	Client c = null;
+
 	DSPforJNI dsp = new DSPforJNI();
 
 	@Override
@@ -35,9 +34,6 @@ public class MainService extends Service {
 
 	@Override
 	public void onCreate() {
-		c = new Client();
-		new Thread(c).start();
-		audioTrack.play();
 		super.onCreate();
 	}
 
@@ -45,24 +41,23 @@ public class MainService extends Service {
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		// TODO Auto-generated method stub
 		String str = intent.getStringExtra("btn");
-		if (str.equals("start"))
-			KeepGoing = true;
-		else if (str.equals("stop"))
-			KeepGoing = false;
+		if (str != null) {
+			if (str.equals("start")) {
 
+				c = new Client();
+				new Thread(c).start();
+				audioTrack.play();
+				KeepGoing = true;
+			} else if (str.equals("stop"))
+				KeepGoing = false;
+		}
 		return super.onStartCommand(intent, flags, startId);
 	}
 
 	public void onDestroy() {
 		// TODO Auto-generated method stub
 		audioTrack.release();
-		try {
-			sock.close();
-			Log.i("false", "closesock");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		c.stop();
 		super.onDestroy();
 	}
 
@@ -81,21 +76,23 @@ public class MainService extends Service {
 				serverAddr = InetAddress.getByName(SERVER_NAME);
 				sock = new Socket(serverAddr, PORT);
 				input = new DataInputStream(sock.getInputStream());
-				while (true) {
-					Recv();
 
+				while (KeepGoing) {
+					Recv();
 				}
+				sock.close();
 			} catch (Exception e) {
-				Log.e("UDP", "C: Error", e);
 			}
+		}
+
+		public void stop() {
+			KeepGoing = false;
 		}
 
 		public void Recv() throws Exception {
 			input.read(datafile);
-			if (KeepGoing)
-				audioTrack.write(dsp.playAfterDSP(datafile), 0,
-						datafile.length * 2);
-			// audioTrack.write(datafile, 0, datafile.length);
+			audioTrack
+					.write(dsp.playAfterDSP(datafile), 0, datafile.length * 2);
 		}
 	}
 }

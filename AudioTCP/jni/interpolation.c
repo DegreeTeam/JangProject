@@ -5,7 +5,6 @@
  */
 
 void javaLinear_interpolation_filter(float* data) {
-	__android_log_print(ANDROID_LOG_DEBUG, "NDK_LOG", "INTO INTERPOLATION");
 	int i, j;
 	float tmp;
 	for (i = 0; i < DOWN_FACTOR - 1; i++) {

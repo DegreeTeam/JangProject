@@ -5,10 +5,10 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := libdsp-eachmodule
 LOCAL_SRC_FILES := convolution.c       \
-				   functioncall.c	   \
 				   upsampling.c		   \
 				   interpolation.c     \
-				   byte_convert.c
+				   byte_convert.c      \
+				   pausesound.c
 				   
 
 include $(BUILD_STATIC_LIBRARY)

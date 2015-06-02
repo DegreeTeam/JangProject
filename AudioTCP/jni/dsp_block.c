@@ -21,12 +21,23 @@ JNIEXPORT jbyteArray JNICALL Java_com_example_audiotcp_DSPforJNI_DSPfromJNI(
 //			(short) M[12], (short) M[13], (short) M[14], (short) M[15],
 //			(short) M[16], (short) M[17], (short) M[18], (short) M[19]);
 //	__android_log_print(ANDROID_LOG_DEBUG, "NDK_LOG",
-//			"%d %d %d %d %d %d %d %d %d %d %d %d ",
-//			(short) M[20], (short) M[21], (short) M[22], (short) M[23],
-//			(short) M[24], (short) M[25], (short) M[26], (short) M[27],
-//			(short) M[28], (short) M[29], (short) M[30], (short) M[31]);
+//			"%d %d %d %d %d %d %d %d %d %d %d %d ", (short) M[20],
+//			(short) M[21], (short) M[22], (short) M[23], (short) M[24],
+//			(short) M[25], (short) M[26], (short) M[27], (short) M[28],
+//			(short) M[29], (short) M[30], (short) M[31]);
 
-	javaUpSampling(M, result1);
+	for (i = 0; i < 32; i++) {
+		if (((short) M[i] != -128) && ((short) M[i] != 127))
+			break;
+	}
+
+	if (i == 32) {
+		javaPauseSound(result);
+		(*env)->SetByteArrayRegion(env, ret, 0, DataLen * 2, result);
+		(*env)->ReleaseByteArrayElements(env, input, M, 0);
+		return ret;
+	} else {
+		javaUpSampling(M, result1);
 
 //	__android_log_print(ANDROID_LOG_DEBUG, "NDK_LOG",
 //			"%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f ",
@@ -39,16 +50,11 @@ JNIEXPORT jbyteArray JNICALL Java_com_example_audiotcp_DSPforJNI_DSPfromJNI(
 //			result1[45], result1[47], result1[49], result1[51], result1[53],
 //			result1[55], result1[57], result1[59], result1[61], result1[63]);
 
-	javaLinear_interpolation_filter(result1);
-
-	//javaConvolution(result1);
-
-	javaByte_Converter(result1, result);
-
-	(*env)->SetByteArrayRegion(env, ret, 0, DataLen * 2, result);
-	(*env)->ReleaseByteArrayElements(env, input, M, 0);
-
-	//javaFunctionCall(env, obj, ret);
-	return ret;
-
+		javaLinear_interpolation_filter(result1);
+		//javaConvolution(result1);
+		javaByte_Converter(result1, result);
+		(*env)->SetByteArrayRegion(env, ret, 0, DataLen * 2, result);
+		(*env)->ReleaseByteArrayElements(env, input, M, 0);
+		return ret;
+	}
 }

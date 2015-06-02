@@ -5,57 +5,12 @@ clc;
 cd C:\Users\Jangs\Documents\JangProject;
 
 TESTCASE = 1;
-down_N = 3;                            % 다운 샘플링 계수
-FILTER_TYPE = 2;                       % 1 == mean, 2 == linear, 3 == nevile
-datatype = 3;                          % 1 == uint8, 2 == int16, 3 == float
+down_N = 6;                            % 다운 샘플링 계수
+FILTER_TYPE = 3;                       % 1 == mean, 2 == linear, 3 == nevile
+datatype = 1;                          % 1 == uint8, 2 == int16, 3 == float
 BPFtype = 3;                           % 1 == AM Radio 2 == FM Radio 3 == NTSC TV Audio 
 
 fprintf('Down_sampling_Level : %d, Filter Type : %d, Data type : %d\n',down_N,FILTER_TYPE, datatype);
-
-%% LPF 만들기
-if(BPFtype == 1)
-[N,fpts,mag,wt]=firpmord([1980 3020],[1 0],[0.0005 0.0005],22050);
-[q0,err]=firpm(N,fpts,mag,wt);
-q0(40)=q0(40)+err;
-q0 = single(q0);
-h0=firminphase(q0);
-
-figure(1);
-H0  = freqz(h0,1,22050);
-plot(abs(H0),'r');
-title('AM 라디오 100Hz ~ 5,000 Hz , Filter coefficient 40'); 
-
-elseif(BPFtype == 2)  
-[N,fpts,mag,wt]=firpmord([4480 5520],[1 0],[0.0005 0.0005],22050);
-[q0,err]=firpm(N,fpts,mag,wt);
-q0(40)=q0(40)+err;
-q0 = single(q0);
-h0=firminphase(q0);
-
-figure(1);
-H0  = freqz(h0,1,22050);
-plot(abs(H0),'r');
-title('FM 라디오 100Hz ~ 10,000 Hz , Filter coefficient 40');
-
-elseif(BPFtype == 3)
-[N,fpts,mag,wt]=firpmord([6980 8020],[1 0],[0.0005 0.0005],22050);
-[q0,err]=firpm(N,fpts,mag,wt);
-q0(40)=q0(40)+err;
-q0 = single(q0);
-h0=firminphase(q0);
-
-[N,fpts,mag,wt]=firpmord([5250 9750],[1 0],[0.0005 0.0005],22050);
-[q0,err]=firpm(N,fpts,mag,wt);
-q0(9)=q0(9)+err;
-q0 = single(q0);
-h0=firminphase(q0);
-
-
-figure(1);
-H0  = freqz(h0,1,22050);
-plot(abs(H0),'r');
-title('NTSC TV 오디오 80Hz ~ 15,000 Hz , Filter coefficient 40');
-end
 
 %% 음성신호 읽기 (16bit -> 8bit)
 if(TESTCASE == 1)
@@ -74,15 +29,16 @@ if(TESTCASE == 5)
     [x_16,fs,bit]=wavread('testcase5.wav','native'); % read speaker signal
 end
 
-x_16 = x_16(1:4096*2000);
+x_16 = x_16(1:32);
 % 16 bit -> 8 bit
+tic();
 con_x = int32(x_16) + 32768;
 x_8 =  uint8((con_x ./256));  % 캐스팅시 데이터가 손상된다. 1손상 256 -> 255
 if(datatype == 3)
     x_float = single(x_16)/32768;
 end
 
-x_16 = int16(x_8)
+x_16 = int16(x_8);
 %% 음성신호 실시간 처리
 % Buffer 사용
 
@@ -137,7 +93,7 @@ if(FILTER_TYPE == 3)
     interp_x =  nevile_interpolation_filter(up_x,down_N,ndown_sample);
 end
 
-
+toc();
 
 if(datatype == 1)
     %% 8bit->int16 확장 모듈 구현
@@ -147,29 +103,31 @@ if(datatype == 1)
     
     %%  Data Check기 구현 (전체 샘플수에 대한)
     diff= sum(abs(x_8  - interp_x));
-    fprintf('Error rate : %s\n',diff/total_sample);
+    fprintf('Error rate : %d\n', diff/total_sample);
 end
+
+
 if (datatype == 3)
     con_x = interp_x;
     %%  Data Check기 구현 (전체 샘플수에 대한)
     diff= sum(abs(x_float  - con_x));
-    fprintf('Error rate : %s\n',diff/total_sample);
+    fprintf('Error rate : %s\n', diff/total_sample);
 end
 
 %% BPF 적용시키기 
-tic();
-result_x = conv(con_x,h0); 
-toc();
- %%  Data Check기 구현 (전체 샘플수에 대한)
-    diff= sum(abs(x_float  - result_x(1:total_sample)));
-    fprintf('(After_BPF) Error rate : %s\n',diff/total_sample);
-
-figure(2);
+% tic();
+% result_x = conv(con_x,h0); 
+% toc();
+%  %%  Data Check기 구현 (전체 샘플수에 대한)
+%     diff= sum(abs(x_float  - result_x(1:total_sample)));
+%     fprintf('(After_BPF) Error rate : %s\n',diff/total_sample);
+% 
+% figure(2);
 
 %stem(con_x(30000:31000))
-player = audioplayer(con_x,fs);
-play(player);
-% stop(player);
+% player = audioplayer(con_x,fs);
+% play(player);
+% % stop(player);
 
 %% 속도테스트 및 오차율 측정,방법
 
