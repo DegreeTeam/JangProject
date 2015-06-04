@@ -5,8 +5,8 @@ clc;
 cd C:\Users\Jangs\Documents\JangProject;
 
 TESTCASE = 1;
-down_N = 6;                            % 다운 샘플링 계수
-FILTER_TYPE = 3;                       % 1 == mean, 2 == linear, 3 == nevile
+down_N = 5;                            % 다운 샘플링 계수
+FILTER_TYPE = 2;                       % 1 == mean, 2 == linear, 3 == nevile
 datatype = 1;                          % 1 == uint8, 2 == int16, 3 == float
 BPFtype = 3;                           % 1 == AM Radio 2 == FM Radio 3 == NTSC TV Audio 
 
@@ -29,7 +29,7 @@ if(TESTCASE == 5)
     [x_16,fs,bit]=wavread('testcase5.wav','native'); % read speaker signal
 end
 
-x_16 = x_16(1:32);
+x_16 = x_16(4287756:4287788);
 % 16 bit -> 8 bit
 tic();
 con_x = int32(x_16) + 32768;
@@ -103,16 +103,10 @@ if(datatype == 1)
     
     %%  Data Check기 구현 (전체 샘플수에 대한)
     diff= sum(abs(x_8  - interp_x));
-    fprintf('Error rate : %d\n', diff/total_sample);
+    fprintf('Error rate : %d\n', diff);
 end
 
 
-if (datatype == 3)
-    con_x = interp_x;
-    %%  Data Check기 구현 (전체 샘플수에 대한)
-    diff= sum(abs(x_float  - con_x));
-    fprintf('Error rate : %s\n', diff/total_sample);
-end
 
 %% BPF 적용시키기 
 % tic();

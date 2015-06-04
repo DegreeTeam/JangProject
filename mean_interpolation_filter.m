@@ -14,7 +14,7 @@ for i = 1:(down_Level-1)
     for j = 1:(ndown_sample-1)
         if(datatype == 1)
         % uint8 의 경우 보간법
-        % vect_result(down_Level *j+i) = uint8((uint16(vect_X(down_Level*j)) + uint16(vect_X(down_Level*(j+1))))/2);
+         vect_result(down_Level *j+i) = uint8((uint16(vect_X(down_Level*j)) + uint16(vect_X(down_Level*(j+1))))/2);
         end
         if(datatype == 3)
         % float 의 경우 보간법

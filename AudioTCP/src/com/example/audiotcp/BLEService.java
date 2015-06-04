@@ -114,7 +114,7 @@ public class BLEService extends Service {
 									BLEready = false;
 								}
 
-								Log.d("BLETEST", String.valueOf(uuid));
+								Log.i("BLETEST", String.valueOf(uuid));
 								Thread.sleep(50);
 
 							} catch (Exception e) {

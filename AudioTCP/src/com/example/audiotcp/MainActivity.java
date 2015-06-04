@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.TimerTask;
 
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningServiceInfo;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -53,7 +55,7 @@ public class MainActivity extends Activity {
 	Button leftbtn;
 	TextView title;
 	SeekBar sound;
-	
+	Button refreshbtn;
 	// Queue - BLE
 	public BLEArr curBLE;
 
@@ -70,14 +72,11 @@ public class MainActivity extends Activity {
 		RHandler = new RecHandler();
 		mcontext = this;
 		mgr = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-
 		receiver = new NetworkReceiver();
 		IntentFilter wifiFilter = new IntentFilter();
 		wifiFilter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION); //
 		this.registerReceiver(receiver, wifiFilter);
-
 		ui_init();
-
 	}
 
 	@Override
@@ -105,9 +104,7 @@ public class MainActivity extends Activity {
 	protected void update() {
 
 		curBLE = BLEService.cqueue.connectble;
-		// String text = curBLE.getDevice().getName();
 		String text = curBLE.getUUid();
-		// Log.i("RECEIVE", text);
 		if (text != null)
 			title.setText(text.substring(0, 8));
 
@@ -117,6 +114,8 @@ public class MainActivity extends Activity {
 	protected void play() {
 		if (BLEService.IsBLESignal) {
 			Intent Service = new Intent(MainActivity.this, MainService.class);
+			first = true;
+			muteflag = false;
 			Service.putExtra("btn", "start");
 			startService(Service);
 			playbtn.setButtonDrawable(R.drawable.center_stop);
@@ -196,9 +195,28 @@ public class MainActivity extends Activity {
 		leftbtn = (Button) this.findViewById(R.id.left);
 		title = (TextView) this.findViewById(R.id.title);
 		sound = (SeekBar) this.findViewById(R.id.seekBar);
+		refreshbtn = (Button)this.findViewById(R.id.refresh);
+		
 		initBar(sound, AudioManager.STREAM_MUSIC);// for Volume this is
 													// neccessary
-
+		refreshbtn.setOnClickListener(new OnClickListener()
+		   {
+		    public void onClick(View view)
+		    {
+		    	if(isServiceRunningCheck()) {
+		    		Log.i("TESTservice", "stopservice");
+		    		stopService(new Intent(MainActivity.this, MainService.class));
+		    	}
+		    	new AsyncWifiConnect().execute(BLEService.cqueue.next());
+	    		Log.i("service", "connect");
+				playbtn.setButtonDrawable(R.drawable.center);
+				title.setText("재생 버튼을 눌러주세요");
+				mgr.setStreamMute(AudioManager.STREAM_MUSIC, false);
+		    	first = true;
+		    	
+		     }
+		    }
+		);
 		// CLICK LISTENER
 		playbtn.setOnCheckedChangeListener(new ToggleButton.OnCheckedChangeListener() {
 			@Override
@@ -212,8 +230,9 @@ public class MainActivity extends Activity {
 				if (first) {
 					play();
 					first = false;
-				} else
-					pause();
+				} else {
+						pause();
+				}
 				editor.commit();
 				// TODO Auto-generated method stub
 			}
@@ -222,6 +241,11 @@ public class MainActivity extends Activity {
 		leftbtn.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				prev();
+				if(isServiceRunningCheck()) {
+		    		Log.i("TESTservice", "servicestop");
+		    		stopService(new Intent(MainActivity.this, MainService.class));
+		    	}
+
 				Log.i("JUSTTEST", "left");
 			}
 		});
@@ -229,11 +253,26 @@ public class MainActivity extends Activity {
 		rightbtn.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				next();
+				if(isServiceRunningCheck()) {
+		    		Log.i("TESTservice", "servicestop");
+		    		stopService(new Intent(MainActivity.this, MainService.class));
+		    	}
+
 				Log.i("JUSTTEST", "right");
 			}
 		});
 	}
-
+	
+	public boolean isServiceRunningCheck() {
+        ActivityManager manager = (ActivityManager) this.getSystemService(Activity.ACTIVITY_SERVICE);
+        for (RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if ("com.example.audiotcp.MainService".equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+}
+	
 	private void initBar(SeekBar bar, final int stream) {
 		bar.setMax(mgr.getStreamMaxVolume(stream));
 		bar.setProgress(mgr.getStreamVolume(stream));
@@ -261,6 +300,8 @@ public class MainActivity extends Activity {
 		String ssid = uuid.substring(0, 8);
 		String password = uuid.substring(8, 16);
 
+		Log.i("wificonnect", ssid);
+		Log.i("wificonnect", password);
 		manager = (WifiManager) mcontext.getSystemService(Context.WIFI_SERVICE);
 		WifiInfo winfo = manager.getConnectionInfo();
 
@@ -332,6 +373,7 @@ public class MainActivity extends Activity {
 		protected void onPreExecute() {
 			super.onPreExecute();
 			progressDialog = new ProgressDialog(mcontext);
+			progressDialog.setCanceledOnTouchOutside(false);
 			progressDialog.setMessage("WIFI CONNECTING");
 			progressDialog.show();
 		}
@@ -341,12 +383,14 @@ public class MainActivity extends Activity {
 			int i;
 			wificonnect(str[0]);
 			try {
-				Thread.sleep(3000);
+				Thread.sleep(5000);
+			
 				for (i = 0; i < 1000; i++) {
-					if (wificonnection)
+					if (wificonnection) 
 						break;
 					Thread.sleep(500);
 				}
+				Thread.sleep(1000);
 
 			} catch (InterruptedException e) {
 				e.printStackTrace();

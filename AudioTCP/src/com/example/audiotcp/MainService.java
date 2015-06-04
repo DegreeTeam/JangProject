@@ -1,6 +1,7 @@
 package com.example.audiotcp;
 
 import java.io.DataInputStream;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 
@@ -10,6 +11,7 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.IBinder;
+import android.util.Log;
 
 public class MainService extends Service {
 
@@ -58,6 +60,14 @@ public class MainService extends Service {
 		// TODO Auto-generated method stub
 		audioTrack.release();
 		c.stop();
+		if(sock != null)
+			try {
+				sock.close();
+				Log.i("service","sockclose");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		super.onDestroy();
 	}
 
@@ -76,12 +86,25 @@ public class MainService extends Service {
 				serverAddr = InetAddress.getByName(SERVER_NAME);
 				sock = new Socket(serverAddr, PORT);
 				input = new DataInputStream(sock.getInputStream());
-
+				Log.i("servicesock","newsock");
 				while (KeepGoing) {
 					Recv();
 				}
 				sock.close();
+				sock = null;
 			} catch (Exception e) {
+				if(sock != null) {
+						try {
+							sock.close();
+							sock = null;
+						} catch (IOException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+						Log.i("service","sockclose");
+				
+				}
+					
 			}
 		}
 
@@ -93,6 +116,7 @@ public class MainService extends Service {
 			input.read(datafile);
 			audioTrack
 					.write(dsp.playAfterDSP(datafile), 0, datafile.length * 2);
+			Log.i("recv",datafile.toString());
 		}
 	}
 }
