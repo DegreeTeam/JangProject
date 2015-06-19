@@ -2,6 +2,8 @@ package com.catchwave.view;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
@@ -17,7 +19,7 @@ public class PopupActivity extends Activity {
 	public void PopupClick(View v) {
 		switch (v.getId()) {
 		case R.id.btn1:
-			Intent intent = new Intent(this, PlayerActivity.class);
+			Intent intent = new Intent(this, LogoActivity.class);
 			intent.putExtra("UUID", uuidData);
 			startActivity(intent);
 			finish();
@@ -36,7 +38,6 @@ public class PopupActivity extends Activity {
 		setContentView(R.layout.activity_pop);
 
 		tv = (TextView) findViewById(R.id.tv);
-
 		getWindow().addFlags(
 				WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
 						| WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
@@ -51,6 +52,10 @@ public class PopupActivity extends Activity {
 	protected void onResume() {
 		super.onResume();
 		String name = uuidData.substring(0, 8);
+		tv.setTypeface(Typeface.createFromAsset(getAssets(),
+				"fonts/Generally_Speaking.ttf"));
+		tv.setPaintFlags(tv.getPaintFlags() | Paint.FAKE_BOLD_TEXT_FLAG);
+		tv.setTextScaleX(2.0f);
 		tv.setText(name);
 	}
 

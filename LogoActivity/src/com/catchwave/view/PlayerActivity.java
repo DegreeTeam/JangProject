@@ -48,8 +48,7 @@ public class PlayerActivity extends Activity {
 		TextView tv = (TextView) findViewById(R.id.title);
 		tv.setTypeface(Typeface.createFromAsset(getAssets(),
 				"fonts/Generally_Speaking.ttf"));
-		tv.setPaintFlags(textViewTitle.getPaintFlags()
-				| Paint.FAKE_BOLD_TEXT_FLAG);
+		tv.setPaintFlags(tv.getPaintFlags() | Paint.FAKE_BOLD_TEXT_FLAG);
 		tv.setTextScaleX(2.0f);
 		tv.setText(name);
 

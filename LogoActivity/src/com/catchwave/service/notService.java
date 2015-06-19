@@ -17,7 +17,7 @@ import android.os.PowerManager;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.catchwave.view.PlayerActivity;
+import com.catchwave.view.LogoActivity;
 import com.catchwave.view.PopupActivity;
 import com.catchwave.view.R;
 import com.catchwave.vo.BleVO;
@@ -55,14 +55,14 @@ public class notService extends Service {
 				if (pm.isScreenOn()) {
 					/* Screen on State - Call notification */
 					if (!PopupActivity.IsPopup)
-						NotificationBuilder(ssid);
+						NotificationBuilder(ssid + pw);
 				} else {
 					/*
 					 * Screen off State - Call popup activity
 					 */
 					Intent popupIntent = new Intent(notService.this,
 							PopupActivity.class);
-					popupIntent.putExtra("PUUID", ssid);
+					popupIntent.putExtra("PUUID", ssid + pw);
 					popupIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 					startActivity(popupIntent);
 				}
@@ -143,7 +143,7 @@ public class notService extends Service {
 		PendingIntent pendingIntent = null;
 
 		Log.i("TEST", String.valueOf(count_noti));
-		Intent trans = new Intent(this, PlayerActivity.class);
+		Intent trans = new Intent(this, LogoActivity.class);
 		trans.putExtra("UUID", uuid);
 
 		pendingIntent = PendingIntent.getActivity(this, count_noti, trans,
@@ -193,6 +193,5 @@ public class notService extends Service {
 		running = false;
 		mBluetoothAdapter.stopLeScan(mLeScanCallback);
 		super.onDestroy();
-
 	}
 }
