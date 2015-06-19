@@ -3,6 +3,7 @@ package com.catchwave.view;
 import java.util.ArrayList;
 
 import android.annotation.SuppressLint;
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
@@ -12,6 +13,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -21,9 +24,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.catchwave.adapter.BleListAdapter;
+import com.catchwave.floatingactionbutton.FloatingActionButton;
 import com.catchwave.service.notService;
 import com.catchwave.vo.BleVO;
 import com.util.BleScanner;
@@ -32,13 +37,25 @@ public class BleListActivity extends Activity {
 	private BluetoothAdapter mBluetoothAdapter;
 	ArrayList<BleVO> ble_arr;
 	BleListAdapter adapter;
-	Button scan;
+	private FloatingActionButton mFloatingButton;
 	int mode_cur;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_ble);
+
+		// ActionBar 설정 변경
+
+		getActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+		getActionBar().setCustomView(R.layout.action_layout);
+		TextView textViewTitle = (TextView) findViewById(R.id.mytext);
+		textViewTitle.setTypeface(Typeface.createFromAsset(getAssets(),
+				"fonts/Generally_Speaking.ttf"));
+		textViewTitle.setPaintFlags(textViewTitle.getPaintFlags()
+				| Paint.FAKE_BOLD_TEXT_FLAG);
+		textViewTitle.setTextScaleX(1.8f);
+		textViewTitle.setText("CATCH WAVE");
 
 		// BLE 지원 안되는거 종료
 		if (!getPackageManager().hasSystemFeature(
@@ -62,8 +79,8 @@ public class BleListActivity extends Activity {
 		list.setAdapter(adapter);
 
 		// BLE 스캔 기능
-		scan = (Button) findViewById(R.id.scan);
-		scan.setOnClickListener(new Button.OnClickListener() {
+		mFloatingButton = (FloatingActionButton) findViewById(R.id.scan);
+		mFloatingButton.setOnClickListener(new Button.OnClickListener() {
 			@Override
 			public void onClick(View view) {
 				// TODO Auto-generated method stub
